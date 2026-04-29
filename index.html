@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío: Frase vs Oración</title>
+    <style>
+        :root {
+            --azul-muy-oscuro: #0f172a;
+            --azul-principal: #1e293b;
+            --azul-brillante: #00d2ff;
+            --verde-exito: #2ecc71;
+            --rojo-error: #e74c3c;
+            --blanco: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--azul-muy-oscuro);
+            color: var(--blanco);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            background-color: var(--azul-principal);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        /* Cronómetro arriba a la derecha */
+        #timer-display {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            color: var(--azul-brillante);
+            background: rgba(0,0,0,0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .stats {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: var(--azul-brillante);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .word-display {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 2rem 0;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.2;
+            color: #ffffff;
+        }
+
+        .options-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .option-btn {
+            padding: 18px 0;
+            font-size: 1.2rem;
+            border: 2px solid #475569;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--blanco);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .option-btn.selected {
+            background-color: var(--azul-brillante);
+            color: var(--azul-muy-oscuro);
+            border-color: #fff;
+            font-weight: 800;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .main-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #ffffff;
+            color: var(--azul-muy-oscuro);
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .main-btn:hover { background-color: var(--azul-brillante); transform: scale(1.02); }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .success { background-color: var(--verde-exito); color: white; }
+        .error { background-color: var(--rojo-error); color: white; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .restart-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background-color: var(--rojo-error);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        h1 { color: var(--azul-brillante); margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="timer-display">Tiempo: 00:00</div>
+
+    <!-- Pantalla de Inicio -->
+    <div id="start-screen" class="screen active">
+        <h1>Reto Gramatical</h1>
+        <p>¿Eres capaz de distinguir 50 frases de oraciones sin fallar ni una sola vez?</p>
+        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 2rem;">Recuerda: Las oraciones tienen verbos conjugados.</p>
+        <button class="main-btn" onclick="startGame()">EMPEZAR RETO</button>
+    </div>
+
+    <!-- Pantalla de Juego -->
+    <div id="game-content" class="screen">
+        <div class="stats">PUNTOS: <span id="score">0</span> / 50</div>
+        <div class="word-display" id="current-text">Cargando...</div>
+        
+        <div class="options-container">
+            <button id="btn-frase" class="option-btn" onclick="selectOption('frase')">Frase</button>
+            <button id="btn-oracion" class="option-btn" onclick="selectOption('oracion')">Oración</button>
+        </div>
+
+        <button id="action-btn" class="main-btn" onclick="checkAnswer()">Confirmar y Continuar</button>
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <!-- Pantalla de Resultados -->
+    <div id="result-screen" class="screen">
+        <h1 id="result-title"></h1>
+        <p id="result-text"></p>
+        <p id="final-time" style="font-weight: bold; font-size: 1.2rem;"></p>
+        <button id="reset-button-el" class="restart-btn" onclick="goToStart()">Volver al Inicio</button>
+    </div>
+</div>
+
+<script>
+    const pool = [
+        { t: "El sol brilla hoy", a: "oracion" }, { t: "Ella camina lento", a: "oracion" },
+        { t: "Nosotros ganaremos", a: "oracion" }, { t: "El gato duerme", a: "oracion" },
+        { t: "Llovió mucho ayer", a: "oracion" }, { t: "Ana estudia música", a: "oracion" },
+        { t: "Ellos compraron pan", a: "oracion" }, { t: "El tren llegará tarde", a: "oracion" },
+        { t: "Me gusta el café", a: "oracion" }, { t: "Tú sabes la verdad", a: "oracion" },
+        { t: "El agua hierve", a: "oracion" }, { t: "Escribo un poema", a: "oracion" },
+        { t: "El niño saltó", a: "oracion" }, { t: "Las flores huelen bien", a: "oracion" },
+        { t: "Había mucha gente", a: "oracion" }, { t: "Corrimos por el parque", a: "oracion" },
+        { t: "El libro es aburrido", a: "oracion" }, { t: "Juan limpia su cuarto", a: "oracion" },
+        { t: "El sol saldrá pronto", a: "oracion" }, { t: "Cocinamos una tarta", a: "oracion" },
+        { t: "Ustedes bailan genial", a: "oracion" }, { t: "El perro ladra", a: "oracion" },
+        { t: "Fuimos al cine", a: "oracion" }, { t: "Hace calor aquí", a: "oracion" },
+        { t: "Él lee el periódico", a: "oracion" }, { t: "Perdí mis llaves", a: "oracion" },
+        { t: "La ventana está rota", a: "oracion" }, { t: "Ellas ríen siempre", a: "oracion" },
+        { t: "Busco mi paraguas", a: "oracion" }, { t: "El reloj se paró", a: "oracion" },
+        { t: "Tengo mucha hambre", a: "oracion" }, { t: "El equipo perdió", a: "oracion" },
+        { t: "Mañana es fiesta", a: "oracion" }, { t: "Ella rompió el vaso", a: "oracion" },
+        { t: "Pedro conduce rápido", a: "oracion" }, { t: "El viento sopla", a: "oracion" },
+        { t: "He visto un ovni", a: "oracion" }, { t: "La cena está lista", a: "oracion" },
+        { t: "Aprendo francés", a: "oracion" }, { t: "¡Vámonos de aquí!", a: "oracion" },
+        { t: "Un día de estos", a: "frase" }, { t: "Café con leche", a: "frase" },
+        { t: "La casa de madera", a: "frase" }, { t: "¡Qué susto!", a: "frase" },
+        { t: "Rosas rojas frescas", a: "frase" }, { t: "Mañana por la mañana", a: "frase" },
+        { t: "Sin miedo al éxito", a: "frase" }, { t: "El mejor regalo", a: "frase" },
+        { t: "Cerca de la playa", a: "frase" }, { t: "Por la tarde", a: "frase" },
+        { t: "¡Buenas noches!", a: "frase" }, { t: "Un silencio incómodo", a: "frase" },
+        { t: "Chocolate muy dulce", a: "frase" }, { t: "Lejos de casa", a: "frase" },
+        { t: "El coche de mi tío", a: "frase" }, { t: "¡Qué alegría verte!", a: "frase" },
+        { t: "Bajo la lluvia", a: "frase" }, { t: "Noche de estrellas", a: "frase" },
+        { t: "La mochila azul", a: "frase" }, { t: "Poco a poco", a: "frase" },
+        { t: "¡Hasta mañana!", a: "frase" }, { t: "Días de verano", a: "frase" },
+        { t: "A la vuelta", a: "frase" }, { t: "Hacia el horizonte", a: "frase" },
+        { t: "¡Qué maravilla!", a: "frase" }, { t: "Sin noticias nuevas", a: "frase" },
+        { t: "A plena luz", a: "frase" }, { t: "En medio del mar", a: "frase" },
+        { t: "Zapatos de cuero", a: "frase" }, { t: "Demasiado tarde", a: "frase" },
+        { t: "Cielos despejados", a: "frase" }, { t: "Una historia increíble", a: "frase" },
+        { t: "De vez en cuando", a: "frase" }, { t: "Con mucho cuidado", a: "frase" },
+        { t: "Un paso adelante", a: "frase" }, { t: "Bebidas muy frías", a: "frase" },
+        { t: "¡Vaya sorpresa!", a: "frase" }, { t: "Durante el invierno", a: "frase" },
+        { t: "A través del cristal", a: "frase" }, { t: "Desde mi ventana", a: "frase" },
+        { t: "El camino más corto", a: "frase" }, { t: "Ella quiere bailar", a: "oracion" },
+        { t: "Un grito en la noche", a: "frase" }, { t: "No lo entiendo", a: "oracion" },
+        { t: "Gafas de sol negras", a: "frase" }, { t: "Marta compró flores", a: "oracion" },
+        { t: "En un lugar lejano", a: "frase" }, { t: "El examen fue fácil", a: "oracion" },
+        { t: "Cientos de pájaros", a: "frase" }, { t: "Ellos están cansados", a: "oracion" },
+        { t: "La puerta de hierro", a: "frase" }, { t: "Nadie respondió", a: "oracion" },
+        { t: "¡Qué calor hace!", a: "oracion" }, { t: "Pan recién hecho", a: "frase" },
+        { t: "Mi abuela cocina", a: "oracion" }, { t: "Debajo del puente", a: "frase" },
+        { t: "El tiempo vuela", a: "oracion" }, { t: "Sin palabras", a: "frase" },
+        { t: "La película terminó", a: "oracion" }, { t: "Ojos color miel", a: "frase" }
+    ];
+
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let selectedAnswer = null;
+    
+    // Variables de tiempo
+    let startTime;
+    let timerInterval;
+
+    function startGame() {
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('game-content').classList.add('active');
+        document.getElementById('timer-display').style.display = 'block';
+        
+        questions = [...pool].sort(() => Math.random() - 0.5).slice(0, 50);
+        score = 0;
+        currentIndex = 0;
+        selectedAnswer = null;
+        
+        startTimer();
+        resetButtons();
+        updateUI();
+    }
+
+    function startTimer() {
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimerDisplay, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const diff = Date.now() - startTime;
+        const minutes = Math.floor(diff / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        document.getElementById('timer-display').innerText = `Tiempo: ${minutes}:${seconds}`;
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        return document.getElementById('timer-display').innerText.replace('Tiempo: ', '');
+    }
+
+    function selectOption(val) {
+        selectedAnswer = val;
+        resetButtons();
+        const btn = document.getElementById(val === 'frase' ? 'btn-frase' : 'btn-oracion');
+        btn.classList.add('selected');
+    }
+
+    function resetButtons() {
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+    }
+
+    function checkAnswer() {
+        if (!selectedAnswer) return;
+
+        const feedbackEl = document.getElementById('feedback');
+        const correct = questions[currentIndex].a;
+
+        if (selectedAnswer === correct) {
+            score++;
+            currentIndex++;
+            feedbackEl.innerText = "✓ CORRECTO";
+            feedbackEl.className = "feedback success";
+            feedbackEl.style.display = "block";
+            
+            setTimeout(() => {
+                feedbackEl.style.display = "none";
+                if (score === 50) {
+                    endGame(true);
+                } else {
+                    nextQuestion();
+                }
+            }, 600);
+        } else {
+            feedbackEl.innerText = "✗ INCORRECTO";
+            feedbackEl.className = "feedback error";
+            feedbackEl.style.display = "block";
+            setTimeout(() => endGame(false), 700);
+        }
+    }
+
+    function nextQuestion() {
+        selectedAnswer = null;
+        resetButtons();
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('score').innerText = score;
+        document.getElementById('current-text').innerText = questions[currentIndex].t;
+    }
+
+    function endGame(win) {
+        const finalTime = stopTimer();
+        document.getElementById('game-content').classList.remove('active');
+        document.getElementById('timer-display').style.display = 'none';
+        
+        const screen = document.getElementById('result-screen');
+        const title = document.getElementById('result-title');
+        const text = document.getElementById('result-text');
+        const timeText = document.getElementById('final-time');
+        const btn = document.getElementById('reset-button-el');
+        
+        screen.classList.add('active');
+        
+        if(win) {
+            title.innerText = "¡RETO COMPLETADO!";
+            title.style.color = "var(--verde-exito)";
+            text.innerText = "Eres un experto en gramática. 50 aciertos consecutivos.";
+            timeText.innerText = `Tiempo final: ${finalTime}`;
+            btn.innerText = "Jugar de nuevo";
+            btn.style.backgroundColor = "var(--verde-exito)";
+        } else {
+            title.innerText = "¡HAS FALLADO!";
+            title.style.color = "var(--rojo-error)";
+            text.innerText = `Puntuación: ${score} / 50. Un error te ha devuelto al inicio.`;
+            timeText.innerText = "";
+            btn.innerText = "Reintentar Desafío";
+            btn.style.backgroundColor = "var(--rojo-error)";
+        }
+    }
+
+    function goToStart() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+        document.getElementById('timer-display').innerText = "Tiempo: 00:00";
+    }
+</script>
+
+</body>
+</html>
